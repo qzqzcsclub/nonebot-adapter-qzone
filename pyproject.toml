@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "nonebot-adapter-qqzone"
+version = "0.1.0"
+description = "QQZone Guild adapter for nonebot2"
+authors = ["qzcsclub <qzcsclub@outlook.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
+repository = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
+documentation = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone#readme"
+keywords = ["bot", "qq", "qqbot", "qqzone"]
+packages = [{ include = "nonebot" }]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = "^1.9.0"
+nonebot2 = "^2.0.0-beta.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
