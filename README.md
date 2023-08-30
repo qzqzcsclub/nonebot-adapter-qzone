@@ -33,4 +33,4 @@
 
 ## 许可证
 
-本项目使用 [GNU-GPL v3.0](https://github.com/qzqzcsclub/nonebot-adapter-qqzone/blob/main/LICENSE) 作为开源许可证。
+本项目使用 [MIT](https://github.com/qzqzcsclub/nonebot-adapter-qqzone/blob/main/LICENSE) 作为开源许可证。
