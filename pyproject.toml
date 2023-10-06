@@ -1,21 +1,39 @@
-[tool.poetry]
-name = "nonebot-adapter-qqzone"
+[project]
+name = "nonebot-adapter-qzone"
 version = "0.1.0"
-description = "QQZone Guild adapter for nonebot2"
-authors = ["qzcsclub <qzcsclub@outlook.com>"]
-license = "MIT"
+description = "Qzone adapter for NoneBot"
+authors = [
+    { name = "HeziCyan", email = "hezicyan@gmail.com" },
+    { name = "GregTaoo", email = "gregtaoo@outlook.com" },
+    { name = "itsevin", email = "itsevin@qq.com" },
+    { name = "qzcsclub", email = "qzcsclub@outlook.com" },
+]
+
 readme = "README.md"
 homepage = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
 repository = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
 documentation = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone#readme"
-keywords = ["bot", "qq", "qqbot", "qqzone"]
-packages = [{ include = "nonebot" }]
+keywords = ["bot", "nonebot", "qzone"]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pydantic = "^1.9.0"
-nonebot2 = "^2.0.0-beta.1"
+requires-python = ">=3.8, <4.0"
+dependencies = [
+    "nonebot2[fastapi]>=2.0.1",
+    "nonebot-adapter-console>=0.4.0",
+    "requests>=2.31.0",
+]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.nonebot]
+adapters = [
+    { name = "Console", module_name = "nonebot.adapters.console" }
+]
+plugins = []
+plugin_dirs = []
+builtin_plugins = ["echo"]
+
+[tool.pdm.dev-dependencies]
+lint = [
+    "pylint>=2.17.5",
+]
+
+[tool.pylint]
+ignore-long-lines = "\\s*(# )?<?https?://\\S+>?$"
