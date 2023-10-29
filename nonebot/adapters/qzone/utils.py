@@ -70,8 +70,4 @@ def open_file(path: str) -> None:
             raise OSError("Unknown platform")
 
 
-# def log(identifier: str, msg: Any) -> None:
-#     print(f"[{identifier}] {msg}", file=sys.stderr)
-
-
 log = logger_wrapper(ADAPTER_NAME)
