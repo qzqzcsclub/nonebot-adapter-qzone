@@ -19,10 +19,33 @@ class MessageSegment(BaseMessageSegment["Message"]):
     def is_text(self) -> bool:
         return self.type == "text"
 
+    @staticmethod
+    def text(content: str) -> "Text":
+        return Text(content)
+
+    @staticmethod
+    def image(uri: str) -> "Image":
+        return Image(uri)
+
 
 class Text(MessageSegment):
-    def __init__(self, text):
-        super().__init__("text", {"text": text})
+    @override
+    def __init__(self, content: str):
+        super().__init__("text", {"text": content})
+
+    @override
+    def __str__(self) -> str:
+        return f"<text: {self.data['text']}>"
+
+
+class Image(MessageSegment):
+    @override
+    def __init__(self, uri: str):
+        super().__init__("image", {"file": uri})
+
+    @override
+    def __str__(self) -> str:
+        return f"<image: {self.data['file']}>"
 
 
 class Message(BaseMessage[MessageSegment]):

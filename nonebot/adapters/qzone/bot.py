@@ -17,7 +17,7 @@ class Bot(BaseBot):
         message: Union[str, Message, MessageSegment],
         **kwargs,
     ) -> Any:
-        log("DEBUG", f"Received {event} {message}")
+        # log("DEBUG", f"Received {event} {message}")
         return await self.post(message)
 
     async def handle_event(self, event: Event) -> None:
@@ -28,4 +28,4 @@ class Bot(BaseBot):
         return await super().call_api(api, **data)
 
     async def post(self, message: Union[str, Message, MessageSegment]) -> Any:
-        return await self.call_api("post", content=message)
+        return await self.call_api("post", message=Message(message))

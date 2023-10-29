@@ -1,21 +1,19 @@
 import asyncio
-from http.cookiejar import Cookie
+import json
 import math
 import time
 import re
 
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict, Union
 from typing_extensions import override
 
-from nonebot.utils import DataclassEncoder, escape_tag
 from nonebot.drivers import URL, Driver, Request, Cookies
 
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
-from .event import PostEvent
 from .config import ADAPTER_NAME, Config
-from .message import Message, MessageSegment
+from .message import Message, Text, Image, MessageSegment
 from .utils import log, open_file, save_image, remove_file
 from .utils import QRCODE_SAVE_PATH
 
@@ -118,37 +116,124 @@ class Adapter(BaseAdapter):
         # log("DEBUG", self.cookies["p_skey"])
         log("INFO", f"登录成功，qq 号码为 {self.qq_number}")
 
-    async def post(self, msg: str) -> None:
+    async def post(self, message: Message) -> None:
         def _get_gtk(val: str) -> int:
             hsh = 5381
             for i in val:
                 hsh += (hsh << 5) + ord(i)
             return hsh & 0x7FFFFFFF
 
-        data = {
-            "syn_tweet_verson": 1,
-            "paramstr": 1,
-            "who": 1,
-            "con": msg,
-            "feedversion": 1,
-            "ver": 1,
-            "ugc_right": 1,
-            "to_sign": 0,
-            "hostuin": self.qq_number,
-            "code_version": 1,
-            "format": "fs",
-            "qzreferrer": "https://user.qzone.qq.com/" + self.qq_number,
-            "pic_template": "",
-            "richtype": "",
-            "richval": "",
-            "special_url": "",
-            "subrichtype": "",
-        }
-        url = URL(
-            "https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6"
-        ) % {"g_tk": _get_gtk(self.cookies["p_skey"])}
+        async def _upload_image(uri: str) -> dict:
+            data = {
+                "qzreferrer": qzreferrer,
+                "filename": "filename",
+                "zzpanelkey": "",
+                "qzonetoken": "",
+                "uploadtype": 1,
+                "albumtype": 7,
+                "exttype": 0,
+                "refer": "shuoshuo",
+                "output_type": "jsonhtml",
+                "charset": "utf-8",
+                "output_charset": "utf-8",
+                "upload_hd": 1,
+                "hd_width": 2048,
+                "hd_height": 10000,
+                "hd_quality": 96,
+                "backUrls": "http://upbak.photo.qzone.qq.com/cgi-bin/upload/cgi_upload_image,http://119.147.64.75/cgi-bin/upload/cgi_upload_image",
+                "url": f"https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk={g_tk}",
+                "base64": 1,
+                "skey": self.cookies["skey"],
+                "zzpaneluin": self.qq_number,
+                "uin": self.qq_number,
+                "p_skey": self.cookies["p_skey"],
+                "jsonhtml_callback": "callback",
+                "p_uin": self.qq_number,
+                "picfile": uri,
+            }
+            html = await self.request(
+                Request(
+                    "POST",
+                    f"https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk={g_tk}",
+                    data=data,
+                    cookies=self.cookies,
+                )
+            )
+            html = html.content.decode()  # type: ignore
+            return json.loads(html[html.find("data") + 6 : html.find("ret") - 2])
+
+        qzreferrer = f"https://user.qzone.qq.com/{self.qq_number}"
+        g_tk = _get_gtk(self.cookies["p_skey"])
+
+        content = ""
+        images: List[Dict] = []
+        # log("DEBUG", f"Message: {message}")
+        for sgm in message:
+            # log("DEBUG", f"{sgm} {type(sgm)} {sgm.data}")
+            if isinstance(sgm, Text):
+                content = sgm.data["text"]
+            if isinstance(sgm, Image):
+                images.append(await _upload_image(sgm.data["file"]))
+
+        data: Dict[str, Union[int, str]] = {}
+        if not images:
+            data = {
+                "syn_tweet_version": 1,
+                "paramstr": 1,
+                "pic_template": "",
+                "richtype": "",
+                "richval": "",
+                "special_url": "",
+                "subrichtype": "",
+                "con": content,
+                "feedversion": 1,
+                "ver": 1,
+                "ugc_right": 1,
+                "to_sign": 0,
+                "hostuin": self.qq_number,
+                "code_version": 1,
+                "format": "fs",
+                "qzreferrer": qzreferrer,
+            }
+        else:
+            richval = []
+            pic_bo = []
+            for img in images:
+                richval.append(
+                    ",{0},{1},{2},{3},{4},{5},,{4},{5}".format(
+                        img["albumid"],
+                        img["lloc"],
+                        img["sloc"],
+                        img["type"],
+                        img["height"],
+                        img["width"],
+                    )
+                )
+                pic_bo.append(img["pre"][img["pre"].find("bo=") + 3 :])
+            data = {
+                "syn_tweet_version": 1,
+                "paramstr": 1,
+                "pic_template": f"tpl-{len(images)}-1",
+                "richtype": 1,
+                "richval": "\t".join(richval),
+                "special_url": "",
+                "subrichtype": 1,
+                "con": content,
+                "feedversion": 1,
+                "ver": 1,
+                "ugc_right": 1,
+                "to_sign": 0,
+                "hostuin": "3193974372",
+                "code_version": 1,
+                "format": "fs",
+                "qzreferrer": qzreferrer,
+                "pic_bo": "{0}\t{0}".format(",".join(pic_bo)),
+            }
+
+        url = f"https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk={g_tk}"
+        log("DEBUG", f"DATA: {data}")
         response = await self.request(
-            Request("POST", str(url), data=data, cookies=self.cookies)
+            Request("POST", url, data=data, cookies=self.cookies)
         )
         # req = self.session.post(str(url), data=data)
         # log("DEBUG", req.text)
@@ -156,5 +241,5 @@ class Adapter(BaseAdapter):
 
     @override
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
-        log("DEBUG", f"Adapter _call_api: {bot} {api} {data}")
-        await self.post(str(data["content"]))
+        # log("DEBUG", f"Adapter _call_api: {bot} {api} {data}")
+        await self.post(data["message"])
