@@ -8,31 +8,31 @@ authors = [
     { name = "itsevin", email = "itsevin@qq.com" },
     { name = "qzcsclub", email = "qzcsclub@outlook.com" },
 ]
+license = { text = "MIT" }
 
 readme = "README.md"
-homepage = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
-repository = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
-documentation = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone#readme"
+# homepage = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
+# repository = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone"
+# documentation = "https://github.com/qzqzcsclub/nonebot-adapter-qqzone#readme"
 keywords = ["bot", "nonebot", "qzone"]
 
 requires-python = ">=3.8, <4.0"
 dependencies = [
-    "nonebot2[fastapi]>=2.0.1",
-    "nonebot-adapter-console>=0.4.0",
-    "requests>=2.31.0",
+    "nonebot2>=2.1.1",
+    "typing-extensions>=4.8.0",
 ]
-
-[tool.nonebot]
-adapters = [
-    { name = "Console", module_name = "nonebot.adapters.console" }
-]
-plugins = []
-plugin_dirs = []
-builtin_plugins = ["echo"]
 
 [tool.pdm.dev-dependencies]
 lint = [
     "pylint>=2.17.5",
+]
+test = [
+    "nonebot-adapter-console>=0.4.0",
+]
+nonebot = [
+    "fastapi>=0.104.0",
+    "httpx>=0.25.0",
+    "uvicorn>=0.23.2",
 ]
 
 [tool.pylint]
