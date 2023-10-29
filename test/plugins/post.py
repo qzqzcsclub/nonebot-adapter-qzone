@@ -6,7 +6,7 @@ from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters import Message
 
-from nonebot.adapters.qzone import PublishEvent
+from nonebot.adapters.qzone import PublishEvent, LoginEvent, LogoutEvent
 from nonebot.adapters.qzone import MessageSegment
 
 
@@ -21,6 +21,8 @@ def to_uri(path: str):
 
 
 publish = on_command("publish", to_me())
+login = on_command("login", to_me())
+logout = on_command("logout", to_me())
 
 
 @publish.handle()
@@ -30,5 +32,17 @@ async def handle_publish(message: Message = CommandArg()):
     msg = MessageSegment.text(str(message))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
-    await bot.send(PublishEvent, msg)
+    await bot.send(PublishEvent(), msg)
     await publish.send(f"{msg} Published")
+
+
+@login.handle()
+async def handle_login(message: Message = CommandArg()):
+    bot = get_bot("qzone")
+    await bot.send(LoginEvent(), message)
+
+
+@logout.handle()
+async def handle_logout(message: Message = CommandArg()):
+    bot = get_bot("qzone")
+    await bot.send(LogoutEvent(), message)
