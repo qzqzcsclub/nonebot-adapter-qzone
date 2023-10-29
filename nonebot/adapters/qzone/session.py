@@ -6,6 +6,7 @@ import re
 from typing import Any, Callable, Coroutine, List, Optional, Dict, Union
 
 from nonebot.drivers import URL, Request, Response, Cookies
+from nonebot.utils import escape_tag
 
 from .utils import log, open_file, save_image, remove_file
 from .utils import QRCODE_SAVE_PATH
@@ -191,4 +192,4 @@ class Session:
         response = await self.request(
             Request("POST", url, data=data, cookies=self.cookies)
         )
-        log("DEBUG", response.content.decode())  # type: ignore
+        log("DEBUG", escape_tag(response.content.decode()))  # type: ignore
