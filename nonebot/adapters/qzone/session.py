@@ -10,6 +10,7 @@ from nonebot.utils import escape_tag
 
 from .utils import log, open_file, save_image, remove_file
 from .utils import QRCODE_SAVE_PATH
+from .extension import NotLoggedIn, AlreadyLoggedIn
 
 
 class Session:
@@ -17,8 +18,12 @@ class Session:
         self, request: Callable[[Request], Coroutine[Any, Any, Response]]
     ) -> None:
         self.request = request
-        self.qq_number: str
-        self.cookies: Cookies
+        self.qq_number: Optional[str] = None
+        self.cookies: Cookies = Cookies()
+
+    @property
+    def logged_in(self) -> bool:
+        return self.qq_number is not None
 
     @staticmethod
     def _decrypt_qrsig(qrsig) -> int:
@@ -112,6 +117,9 @@ class Session:
         return json.loads(html[html.find("data") + 6 : html.find("ret") - 2])
 
     async def login(self):
+        if self.logged_in:
+            raise AlreadyLoggedIn
+
         await self._get_qrcode()
         while True:
             time.sleep(1)
@@ -134,7 +142,18 @@ class Session:
         # log("DEBUG", self.cookies["p_skey"])
         log("INFO", f"登录成功，QQ 号码为 {self.qq_number}")
 
+    async def logout(self):
+        if not self.logged_in:
+            raise NotLoggedIn
+        self.qq_number = None
+        self.cookies.clear()
+        log("INFO", "成功登出")
+
     async def publish(self, content: str = "", images: Optional[List[str]] = None):
+        if not self.logged_in:
+            raise NotLoggedIn
+        assert self.qq_number
+
         data: Dict[str, Union[int, str]] = {}
         if not images:
             data = {

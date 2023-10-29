@@ -1,4 +1,4 @@
 from .bot import Bot
-from .event import PublishEvent
+from .event import PublishEvent, LoginEvent, LogoutEvent
 from .adapter import Adapter
 from .message import Message, MessageSegment

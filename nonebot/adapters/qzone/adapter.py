@@ -9,6 +9,7 @@ from .config import ADAPTER_NAME, Config
 from .message import Message, Text, Image, MessageSegment
 from .utils import log
 from .session import Session
+from .extension import ApiNotAvailable
 
 
 class Adapter(BaseAdapter):
@@ -33,7 +34,6 @@ class Adapter(BaseAdapter):
         self.driver.on_shutdown(self._shutdown)
 
     async def _startup(self) -> None:
-        await self.login()
         self.bot_connect(self.bot)
 
     async def _shutdown(self) -> None:
@@ -41,6 +41,9 @@ class Adapter(BaseAdapter):
 
     async def login(self) -> None:
         await self.session.login()
+
+    async def logout(self) -> None:
+        await self.session.logout()
 
     async def publish(self, message: Message) -> None:
         content = ""
@@ -59,4 +62,12 @@ class Adapter(BaseAdapter):
     @override
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         # log("DEBUG", f"Adapter _call_api: {bot} {api} {data}")
-        await self.publish(data["message"])
+
+        if api == "publish":
+            return await self.publish(data["message"])
+        if api == "login":
+            return await self.login()
+        if api == "logout":
+            return await self.logout()
+
+        raise ApiNotAvailable
