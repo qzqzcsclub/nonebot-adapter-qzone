@@ -42,7 +42,7 @@ class Adapter(BaseAdapter):
     async def login(self) -> None:
         await self.session.login()
 
-    async def post(self, message: Message) -> None:
+    async def publish(self, message: Message) -> None:
         content = ""
         images: List[str] = []
         # log("DEBUG", f"Message: {message}")
@@ -59,4 +59,4 @@ class Adapter(BaseAdapter):
     @override
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         # log("DEBUG", f"Adapter _call_api: {bot} {api} {data}")
-        await self.post(data["message"])
+        await self.publish(data["message"])

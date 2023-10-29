@@ -6,7 +6,7 @@ from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters import Message
 
-from nonebot.adapters.qzone import PostEvent
+from nonebot.adapters.qzone import PublishEvent
 from nonebot.adapters.qzone import MessageSegment
 
 
@@ -20,15 +20,15 @@ def to_uri(path: str):
     return f"data:image/png;base64,{code}"
 
 
-post = on_command("post", to_me())
+publish = on_command("publish", to_me())
 
 
-@post.handle()
-async def handle_post(message: Message = CommandArg()):
+@publish.handle()
+async def handle_publish(message: Message = CommandArg()):
     bot = get_bot("qzone")
     print(type(message), message)
     msg = MessageSegment.text(str(message))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
-    await bot.send(PostEvent, msg)
-    await post.send(f"{msg} Posted")
+    await bot.send(PublishEvent, msg)
+    await publish.send(f"{msg} Published")

@@ -10,16 +10,16 @@ class Event(BaseEvent):
     pass
 
 
-class PostEvent(Event):
+class PublishEvent(Event):
     content: Optional[Message] = None
 
     @override
     def get_event_name(self) -> str:
-        return "post"
+        return "publish"
 
     @override
     def get_type(self) -> str:
-        return "post"
+        return "publish"
 
     @override
     def get_event_description(self) -> str:
