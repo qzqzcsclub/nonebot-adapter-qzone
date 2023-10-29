@@ -47,7 +47,8 @@ class Session:
         save_image(qrcode.content, QRCODE_SAVE_PATH)
         open_file(QRCODE_SAVE_PATH)
         log("INFO", f"二维码成功保存到 {QRCODE_SAVE_PATH}")
-        self.cookies = qrcode.request.cookies  # type: ignore
+        assert qrcode.request
+        self.cookies = qrcode.request.cookies
 
     async def _check_qrcode(self) -> Optional[str]:
         qrsig = self.cookies["qrsig"]
@@ -59,7 +60,8 @@ class Session:
             "action": "0-0-" + self._get_time(),
         }
         qrstatus = await self.request(Request("GET", str(url), cookies=self.cookies))
-        text = qrstatus.content.decode()  # type: ignore
+        assert isinstance(qrstatus.content, bytes)
+        text = qrstatus.content.decode()
         matcher = re.search("ptuiCB\\('0','0','(https:[a-zA-Z0-9?=&/._%]+)','0'", text)
         return matcher.group(1) if matcher else None
 
@@ -105,7 +107,8 @@ class Session:
                 cookies=self.cookies,
             )
         )
-        html = html.content.decode()  # type: ignore
+        assert isinstance(html.content, bytes)
+        html = html.content.decode()
         return json.loads(html[html.find("data") + 6 : html.find("ret") - 2])
 
     async def login(self):
@@ -123,7 +126,8 @@ class Session:
                 response = await self.request(
                     Request("GET", check_sig_link, cookies=self.cookies)
                 )
-                self.cookies = response.request.cookies  # type: ignore
+                assert response.request
+                self.cookies = response.request.cookies
                 break
         remove_file(QRCODE_SAVE_PATH)
         # log("DEBUG", self.cookies)
@@ -192,4 +196,5 @@ class Session:
         response = await self.request(
             Request("POST", url, data=data, cookies=self.cookies)
         )
-        log("DEBUG", escape_tag(response.content.decode()))  # type: ignore
+        assert isinstance(response.content, bytes)
+        log("DEBUG", escape_tag(response.content.decode()))
