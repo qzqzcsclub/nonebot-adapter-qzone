@@ -27,7 +27,7 @@ logout = on_command("logout", to_me())
 
 @publish.handle()
 async def handle_publish(message: Message = CommandArg()):
-    bot = get_bot("qzone")
+    bot = get_bot("qzone_bot")
     print(type(message), message)
     msg = MessageSegment.text(str(message))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
@@ -38,11 +38,11 @@ async def handle_publish(message: Message = CommandArg()):
 
 @login.handle()
 async def handle_login(message: Message = CommandArg()):
-    bot = get_bot("qzone")
+    bot = get_bot("qzone_bot")
     await bot.send(LoginEvent(), message)
 
 
 @logout.handle()
 async def handle_logout(message: Message = CommandArg()):
-    bot = get_bot("qzone")
+    bot = get_bot("qzone_bot")
     await bot.send(LogoutEvent(), message)

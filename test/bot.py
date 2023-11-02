@@ -12,7 +12,12 @@ from nonebot.adapters.console import Adapter as ConsoleAdapter
 from nonebot.adapters.qzone import Adapter as QzoneAdapter
 
 
-nonebot.init(driver="~fastapi+~httpx", log_level="DEBUG")
+nonebot.init(
+    driver="~fastapi+~httpx",
+    log_level="DEBUG",
+    qzone_bot_id="qzone_bot",
+    qzone_cache_path=Path(__file__).parent / "cache",
+)
 nonebot.load_plugin("plugins.post")
 
 app = nonebot.get_asgi()

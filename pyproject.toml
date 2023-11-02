@@ -38,3 +38,4 @@ nonebot = [
 
 [tool.pylint]
 ignore-long-lines = "\\s*(# )?<?https?://\\S+>?$"
+extension-pkg-whitelist = "pydantic"
