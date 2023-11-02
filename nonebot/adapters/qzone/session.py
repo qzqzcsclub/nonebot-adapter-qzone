@@ -8,16 +8,19 @@ from typing import Any, Callable, Coroutine, List, Optional, Dict, Union
 from nonebot.drivers import URL, Request, Response, Cookies
 from nonebot.utils import escape_tag
 
+from .config import Config
 from .utils import log, open_file, save_image, remove_file
-from .utils import QRCODE_SAVE_PATH
 from .extension import NotLoggedIn, AlreadyLoggedIn
 
 
 class Session:
     def __init__(
-        self, request: Callable[[Request], Coroutine[Any, Any, Response]]
+        self,
+        request: Callable[[Request], Coroutine[Any, Any, Response]],
+        config: Config,
     ) -> None:
         self.request = request
+        self.config = config
         self.qq_number: Optional[str] = None
         self.cookies: Cookies = Cookies()
 
@@ -49,9 +52,9 @@ class Session:
             "https://ssl.ptlogin2.qq.com/ptqrshow?appid=549000912&e=2&l=M&s=3&d=72&v=4&t=0.405252856480647&daid=5&pt_3rd_aid=0&u1=https%3A%2F%2Fqzs.qzone.qq.com%2Fqzone%2Fv5%2Floginsucc.html%3Fpara%3Dizone",
         )
         qrcode = await self.request(request)
-        save_image(qrcode.content, QRCODE_SAVE_PATH)
-        open_file(QRCODE_SAVE_PATH)
-        log("INFO", f"二维码成功保存到 {QRCODE_SAVE_PATH}")
+        save_image(qrcode.content, self.config.qrcode_path)
+        open_file(self.config.qrcode_path)
+        log("INFO", f"二维码成功保存到 {self.config.qrcode_path}")
         assert qrcode.request
         self.cookies = qrcode.request.cookies
 
@@ -75,6 +78,9 @@ class Session:
 
     def _get_gtk(self) -> int:
         return self._calc_gtk(self.cookies["p_skey"])
+
+    def _get_qq_number(self) -> str:
+        return self.cookies["uin"][1:]
 
     async def _upload_image(self, uri: str) -> dict:
         data = {
@@ -125,20 +131,17 @@ class Session:
             time.sleep(1)
             check_sig_link = await self._check_qrcode()
             if check_sig_link:
-                matcher = re.search("&uin=([0-9]+)&", check_sig_link)
-                if not matcher:
-                    continue
-                self.qq_number = matcher.group(1)
                 # log("DEBUG", matcher.group(1))
-                # log("DEBUG", self.cookies)
+                log("DEBUG", str(self.cookies))
                 response = await self.request(
                     Request("GET", check_sig_link, cookies=self.cookies)
                 )
                 assert response.request
                 self.cookies = response.request.cookies
+                self.qq_number = self._get_qq_number()
                 break
-        remove_file(QRCODE_SAVE_PATH)
-        # log("DEBUG", self.cookies)
+        remove_file(self.config.qrcode_path)
+        log("DEBUG", str(self.cookies))
         # log("DEBUG", self.cookies["p_skey"])
         log("INFO", f"登录成功，QQ 号码为 {self.qq_number}")
 

@@ -18,11 +18,13 @@ class Adapter(BaseAdapter):
         super().__init__(driver, **kwargs)
 
         self.adapter_config: Config = Config(**self.config.dict())
+        log("DEBUG", self.adapter_config.bot_id)
+        log("DEBUG", str(self.adapter_config.cache_path))
 
-        self.bot = Bot(self, "qzone")
+        self.bot = Bot(self, self.adapter_config.bot_id)
         self._setup()
 
-        self.session = Session(self.request)
+        self.session = Session(self.request, self.adapter_config)
 
     @classmethod
     @override
