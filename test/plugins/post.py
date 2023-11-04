@@ -33,8 +33,8 @@ async def handle_publish(message: Message = CommandArg()):
     msg = MessageSegment.text(str(message))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
-    await bot.send(PublishEvent(), msg)
-    await publish.send(f"{msg} Published")
+    tid, pic_id = await bot.send(PublishEvent(), msg)
+    await publish.send(f"Published: {tid} {pic_id}")
 
 
 @login.handle()
