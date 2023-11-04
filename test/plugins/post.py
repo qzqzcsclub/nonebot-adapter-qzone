@@ -6,7 +6,7 @@ from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters import Message
 
-from nonebot.adapters.qzone import PublishEvent, LoginEvent, LogoutEvent
+from nonebot.adapters.qzone import PublishEvent, LoginEvent, LogoutEvent, QueryEvent
 from nonebot.adapters.qzone import MessageSegment
 
 
@@ -23,6 +23,7 @@ def to_uri(path: str):
 publish = on_command("publish", to_me())
 login = on_command("login", to_me())
 logout = on_command("logout", to_me())
+query = on_command("query", to_me())
 
 
 @publish.handle()
@@ -46,3 +47,13 @@ async def handle_login(message: Message = CommandArg()):
 async def handle_logout(message: Message = CommandArg()):
     bot = get_bot("qzone_bot")
     await bot.send(LogoutEvent(), message)
+
+
+@query.handle()
+async def handle_query(message: Message = CommandArg()):
+    bot = get_bot("qzone_bot")
+    qq_number: str = await bot.send(QueryEvent(), message)
+    if qq_number:
+        await query.send(f"{qq_number} logged in")
+    else:
+        await query.send("No account logged in")
