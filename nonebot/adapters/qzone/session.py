@@ -84,7 +84,7 @@ class Session:
         qrcode = await self.request(request)
         save_image(qrcode.content, self.config.qrcode_path)
         open_file(self.config.qrcode_path)
-        log("INFO", f"二维码成功保存到 {self.config.qrcode_path}")
+        log("INFO", f"QRCode successfully saved to {self.config.qrcode_path}")
         assert qrcode.request
         self.cookies = qrcode.request.cookies
 
@@ -174,7 +174,7 @@ class Session:
         log("DEBUG", str(self.cookies))
         # log("DEBUG", self.cookies["p_skey"])
         self._save_cookies()
-        log("INFO", f"登录成功，QQ 号码为 {self.qq_number}")
+        log("INFO", f"Logged in successfully, QQ number is {self.qq_number}")
 
     async def logout(self):
         if not self.logged_in:
@@ -182,7 +182,7 @@ class Session:
         self.qq_number = None
         self.cookies.clear()
         self._delete_cookies()
-        log("INFO", "成功登出")
+        log("INFO", "Logged out successfully")
 
     async def publish(
         self, content: str = "", images: Optional[List[str]] = None
