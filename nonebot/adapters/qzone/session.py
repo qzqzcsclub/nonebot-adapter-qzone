@@ -5,7 +5,7 @@ import re
 import os
 import json
 
-from typing import Any, Callable, Coroutine, List, Optional, Dict, Union
+from typing import Any, Callable, Coroutine, List, Optional, Dict, Union, Tuple
 
 from nonebot.drivers import URL, Request, Response, Cookies
 from nonebot.utils import escape_tag
@@ -184,12 +184,15 @@ class Session:
         self._delete_cookies()
         log("INFO", "成功登出")
 
-    async def publish(self, content: str = "", images: Optional[List[str]] = None):
+    async def publish(
+        self, content: str = "", images: Optional[List[str]] = None
+    ) -> Tuple[str, List[str]]:
         if not self.logged_in:
             raise NotLoggedIn
         assert self.qq_number
 
         data: Dict[str, Union[int, str]] = {}
+        pic_id: List[str] = []
         if not images:
             data = {
                 "syn_tweet_version": 1,
@@ -225,6 +228,7 @@ class Session:
                     )
                 )
                 pic_bo.append(ret["pre"][ret["pre"].find("bo=") + 3 :])
+                pic_id.append(ret["lloc"])
             data = {
                 "syn_tweet_version": 1,
                 "paramstr": 1,
@@ -247,8 +251,9 @@ class Session:
 
         url = f"https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk={self._get_gtk()}"
         # log("DEBUG", f"DATA: {data}")
-        response = await self.request(
-            Request("POST", url, data=data, cookies=self.cookies)
-        )
-        assert isinstance(response.content, bytes)
-        log("DEBUG", escape_tag(response.content.decode()))
+        html = await self.request(Request("POST", url, data=data, cookies=self.cookies))
+        assert isinstance(html.content, bytes)
+        html = html.content.decode()
+        log("DEBUG", escape_tag(html))
+        ret = json.loads(html[html.find("callback(") + 9 : html.find("});") + 1])
+        return ret["t1_tid"], pic_id

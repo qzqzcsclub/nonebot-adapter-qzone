@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 from typing_extensions import override
 
 from nonebot.drivers import Driver
@@ -47,7 +47,7 @@ class Adapter(BaseAdapter):
     async def logout(self) -> None:
         await self.session.logout()
 
-    async def publish(self, message: Message) -> None:
+    async def publish(self, message: Message) -> Tuple[str, List[str]]:
         content = ""
         images: List[str] = []
         # log("DEBUG", f"Message: {message}")
@@ -59,7 +59,7 @@ class Adapter(BaseAdapter):
                 log("DEBUG", f"{sgm} {type(sgm)} {sgm.data}")
                 images.append(sgm.data["file"])
 
-        await self.session.publish(content, images)
+        return await self.session.publish(content, images)
 
     async def query(self) -> Optional[str]:
         return self.session.qq_number
