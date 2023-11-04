@@ -65,3 +65,13 @@ class LogoutEvent(Event):
     @override
     def get_type(self) -> str:
         return "logout"
+
+
+class QueryEvent(Event):
+    @override
+    def get_event_name(self) -> str:
+        return "query"
+
+    @override
+    def get_type(self) -> str:
+        return "query"

@@ -4,7 +4,7 @@ from typing_extensions import override
 from nonebot.adapters import Bot as BaseBot
 from nonebot.message import handle_event
 
-from .event import Event, PublishEvent, LoginEvent, LogoutEvent
+from .event import Event, PublishEvent, LoginEvent, LogoutEvent, QueryEvent
 from .message import Message, MessageSegment
 from .utils import log
 from .extension import ApiNotAvailable
@@ -27,6 +27,8 @@ class Bot(BaseBot):
             return await self.login()
         if isinstance(event, LogoutEvent):
             return await self.logout()
+        if isinstance(event, QueryEvent):
+            return await self.query()
 
         raise ApiNotAvailable
 
@@ -45,3 +47,6 @@ class Bot(BaseBot):
 
     async def logout(self) -> Any:
         return await self.call_api("logout")
+
+    async def query(self) -> Any:
+        return await self.call_api("query")

@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Optional
 from typing_extensions import override
 
 from nonebot.drivers import Driver
@@ -61,6 +61,9 @@ class Adapter(BaseAdapter):
 
         await self.session.publish(content, images)
 
+    async def query(self) -> Optional[str]:
+        return self.session.qq_number
+
     @override
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         # log("DEBUG", f"Adapter _call_api: {bot} {api} {data}")
@@ -71,5 +74,7 @@ class Adapter(BaseAdapter):
             return await self.login()
         if api == "logout":
             return await self.logout()
+        if api == "query":
+            return await self.query()
 
         raise ApiNotAvailable
