@@ -6,10 +6,10 @@ from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
 from .config import ADAPTER_NAME, Config
-from .message import Message, Text, Image, MessageSegment
+from .message import Message, Text, Image
 from .utils import log
 from .session import Session
-from .extension import ApiNotAvailable
+from .exception import ApiNotAvailable
 
 
 class Adapter(BaseAdapter):

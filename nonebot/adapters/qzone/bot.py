@@ -1,4 +1,4 @@
-from typing import Any, Union, Optional
+from typing import Any, Union
 from typing_extensions import override
 
 from nonebot.adapters import Bot as BaseBot
@@ -7,7 +7,7 @@ from nonebot.message import handle_event
 from .event import Event, PublishEvent, LoginEvent, LogoutEvent, QueryEvent
 from .message import Message, MessageSegment
 from .utils import log
-from .extension import ApiNotAvailable
+from .exception import ApiNotAvailable
 
 
 class Bot(BaseBot):

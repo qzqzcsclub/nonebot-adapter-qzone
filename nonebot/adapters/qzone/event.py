@@ -1,4 +1,3 @@
-from typing import Optional
 from typing_extensions import override
 
 from nonebot.adapters import Event as BaseEvent

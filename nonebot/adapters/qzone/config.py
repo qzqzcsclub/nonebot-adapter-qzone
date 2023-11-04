@@ -29,7 +29,7 @@ class Config(BaseModel):
         return self.cache_path / "qrcode.png"
 
     @property
-    def cookies_path(self) -> Path:
+    def cookie_path(self) -> Path:
         return self.cache_path / "cookies"
 
     class Config:

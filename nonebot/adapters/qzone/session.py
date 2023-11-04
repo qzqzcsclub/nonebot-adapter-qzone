@@ -3,7 +3,6 @@ import math
 import time
 import re
 import os
-import json
 
 from typing import Any, Callable, Coroutine, List, Optional, Dict, Union, Tuple
 
@@ -12,14 +11,14 @@ from nonebot.utils import escape_tag
 
 from .config import Config
 from .utils import log, open_file, save_image, remove_file
-from .extension import NotLoggedIn, AlreadyLoggedIn
+from .exception import NotLoggedIn, AlreadyLoggedIn
 
 
 def _cookies_to_dict(cookies: Cookies) -> dict:
-    cookies_dict = {}
+    cookie_dict = {}
     for cookie in cookies:
-        cookies_dict[cookie.name] = cookie.value
-    return cookies_dict
+        cookie_dict[cookie.name] = cookie.value
+    return cookie_dict
 
 
 class Session:
@@ -35,23 +34,23 @@ class Session:
         self._load_cookies()
 
     def _load_cookies(self) -> None:
-        if not os.path.isfile(self.config.cookies_path):
+        if not os.path.isfile(self.config.cookie_path):
             return
-        cookies = json.loads(self.config.cookies_path.read_text())
+        cookies = json.loads(self.config.cookie_path.read_text())
         self.cookies.update(cookies)
         self.qq_number = self.cookies["uin"][1:]
         log(
             "INFO",
-            f"Cookies loaded from {self.config.cookies_path}: {self.qq_number} logged in",
+            f"Cookies loaded from {self.config.cookie_path}: {self.qq_number} logged in",
         )
 
     def _save_cookies(self) -> None:
         cookies = _cookies_to_dict(self.cookies)
-        self.config.cookies_path.write_text(json.dumps(cookies))
-        log("INFO", f"Cookies saved to {self.config.cookies_path}: {cookies}")
+        self.config.cookie_path.write_text(json.dumps(cookies))
+        log("INFO", f"Cookies saved to {self.config.cookie_path}: {cookies}")
 
     def _delete_cookies(self) -> None:
-        os.remove(self.config.cookies_path)
+        os.remove(self.config.cookie_path)
         log("INFO", "Cookies deleted")
 
     @property
