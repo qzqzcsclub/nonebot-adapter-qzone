@@ -2,6 +2,8 @@ import json
 import math
 import time
 import re
+import os
+import json
 
 from typing import Any, Callable, Coroutine, List, Optional, Dict, Union
 
@@ -11,6 +13,13 @@ from nonebot.utils import escape_tag
 from .config import Config
 from .utils import log, open_file, save_image, remove_file
 from .extension import NotLoggedIn, AlreadyLoggedIn
+
+
+def _cookies_to_dict(cookies: Cookies) -> dict:
+    cookies_dict = {}
+    for cookie in cookies:
+        cookies_dict[cookie.name] = cookie.value
+    return cookies_dict
 
 
 class Session:
@@ -23,6 +32,27 @@ class Session:
         self.config = config
         self.qq_number: Optional[str] = None
         self.cookies: Cookies = Cookies()
+        self._load_cookies()
+
+    def _load_cookies(self) -> None:
+        if not os.path.isfile(self.config.cookies_path):
+            return
+        cookies = json.loads(self.config.cookies_path.read_text())
+        self.cookies.update(cookies)
+        self.qq_number = self.cookies["uin"][1:]
+        log(
+            "INFO",
+            f"Cookies loaded from {self.config.cookies_path}: {self.qq_number} logged in",
+        )
+
+    def _save_cookies(self) -> None:
+        cookies = _cookies_to_dict(self.cookies)
+        self.config.cookies_path.write_text(json.dumps(cookies))
+        log("INFO", f"Cookies saved to {self.config.cookies_path}: {cookies}")
+
+    def _delete_cookies(self) -> None:
+        os.remove(self.config.cookies_path)
+        log("INFO", "Cookies deleted")
 
     @property
     def logged_in(self) -> bool:
@@ -143,6 +173,7 @@ class Session:
         remove_file(self.config.qrcode_path)
         log("DEBUG", str(self.cookies))
         # log("DEBUG", self.cookies["p_skey"])
+        self._save_cookies()
         log("INFO", f"登录成功，QQ 号码为 {self.qq_number}")
 
     async def logout(self):
@@ -150,6 +181,7 @@ class Session:
             raise NotLoggedIn
         self.qq_number = None
         self.cookies.clear()
+        self._delete_cookies()
         log("INFO", "成功登出")
 
     async def publish(self, content: str = "", images: Optional[List[str]] = None):
