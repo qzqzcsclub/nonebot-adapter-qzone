@@ -24,7 +24,7 @@ class Adapter(BaseAdapter):
         self.bot = Bot(self, self.adapter_config.bot_id)
         self._setup()
 
-        self.session = Session(self.request, self.adapter_config)
+        self.session: Optional[Session] = None
 
     @classmethod
     @override
@@ -36,18 +36,24 @@ class Adapter(BaseAdapter):
         self.driver.on_shutdown(self._shutdown)
 
     async def _startup(self) -> None:
+        self.session = Session(self.request, self.adapter_config)
         self.bot_connect(self.bot)
 
     async def _shutdown(self) -> None:
+        assert self.session
+        self.session.close()
         self.bot_disconnect(self.bot)
 
     async def login(self) -> None:
+        assert self.session
         await self.session.login()
 
     async def logout(self) -> None:
+        assert self.session
         await self.session.logout()
 
     async def publish(self, message: Message) -> Tuple[str, List[str]]:
+        assert self.session
         content = ""
         images: List[str] = []
         # log("DEBUG", f"Message: {message}")
@@ -62,6 +68,7 @@ class Adapter(BaseAdapter):
         return await self.session.publish(content, images)
 
     async def query(self) -> Optional[str]:
+        assert self.session
         return self.session.qq_number
 
     @override

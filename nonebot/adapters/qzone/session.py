@@ -4,7 +4,7 @@ import math
 import time
 import re
 import os
-
+from datetime import datetime, timedelta
 from typing import Any, Callable, Coroutine, List, Optional, Dict, Union, Tuple
 
 from nonebot.drivers import URL, Request, Response, Cookies
@@ -23,36 +23,100 @@ def _cookies_to_dict(cookies: Cookies) -> dict:
 
 
 class Session:
+    CookieRefreshTime: timedelta = timedelta(minutes=10)
+
     def __init__(
         self,
         request: Callable[[Request], Coroutine[Any, Any, Response]],
         config: Config,
     ) -> None:
-        self.request = request
+        self._request = request
         self.config = config
         self.qq_number: Optional[str] = None
-        self.cookies: Cookies = Cookies()
+        self._cookies: Cookies = Cookies()
+        self.cookies_last_used: Optional[datetime] = None
         self._load_cookies()
+        self.maintainer = asyncio.create_task(self._maintain_cookies())
+
+    async def request(self, method: str, url: Union[URL, str], **kwargs) -> Response:
+        if "cookies" not in kwargs:
+            kwargs["cookies"] = self.cookies
+            self.cookies_last_used = datetime.now()
+        return await self._request(Request(method, url, **kwargs))
+
+    async def get(self, url: Union[URL, str], **kwargs) -> Response:
+        return await self.request("GET", url, **kwargs)
+
+    async def post(self, url: Union[URL, str], **kwargs) -> Response:
+        return await self.request("POST", url, **kwargs)
+
+    @property
+    def cookies(self) -> Cookies:
+        return self._cookies
+
+    @cookies.setter
+    def cookies(self, value: Cookies) -> None:
+        self._cookies = value
+        if "uin" in value:
+            self._save_cookies()
 
     def _load_cookies(self) -> None:
         if not os.path.isfile(self.config.cookie_path):
+            log("INFO", f"Cookie file {self.config.cookie_path} not found")
             return
-        cookies = json.loads(self.config.cookie_path.read_text())
-        self.cookies.update(cookies)
-        self.qq_number = self.cookies["uin"][1:]
-        log(
-            "INFO",
-            f"Cookies loaded from {self.config.cookie_path}: {self.qq_number} logged in",
-        )
+
+        try:
+            data = json.loads(self.config.cookie_path.read_text())
+            last_used = datetime.fromtimestamp(data["last_used"])
+            if datetime.now() - last_used > self.CookieRefreshTime:
+                log(
+                    "INFO",
+                    f"Cookies in {self.config.cookie_path} are considered expired",
+                )
+                self._delete_cookies()
+                return
+
+            self.cookies_last_used = last_used
+            self.cookies.update(data["cookies"])
+            self.qq_number = self.cookies["uin"][1:]
+            log(
+                "INFO",
+                f"Cookies loaded from {self.config.cookie_path}: {self.qq_number} logged in",
+            )
+        except (json.decoder.JSONDecodeError, TypeError, KeyError) as err:
+            log(
+                "INFO",
+                f"Cookies in {self.config.cookie_path} failed to parse: <{type(err).__name__}: {err}>",
+            )
+            self._delete_cookies()
 
     def _save_cookies(self) -> None:
-        cookies = _cookies_to_dict(self.cookies)
-        self.config.cookie_path.write_text(json.dumps(cookies))
-        log("INFO", f"Cookies saved to {self.config.cookie_path}: {cookies}")
+        assert self.cookies_last_used
+        data = {
+            "last_used": self.cookies_last_used.timestamp(),
+            "cookies": _cookies_to_dict(self.cookies),
+        }
+        self.config.cookie_path.write_text(json.dumps(data))
+        log("INFO", f"Cookies saved to {self.config.cookie_path}: {data}")
 
     def _delete_cookies(self) -> None:
+        self._cookies.clear()
         os.remove(self.config.cookie_path)
-        log("INFO", "Cookies deleted")
+        log("INFO", f"Cookies deleted: {self.cookies}")
+
+    async def _maintain_cookies(self) -> None:
+        while True:
+            if self.qq_number:
+                response = await self.get(
+                    f"https://user.qzone.qq.com/{self.qq_number}/more",
+                )
+                assert response.request
+                self.cookies = response.request.cookies
+                log("DEBUG", f"Cookies updated: {self.cookies}")
+            await asyncio.sleep(self.CookieRefreshTime.total_seconds())
+
+    def close(self) -> None:
+        self.maintainer.cancel()
 
     @property
     def logged_in(self) -> bool:
@@ -77,11 +141,9 @@ class Session:
         return hsh & 0x7FFFFFFF
 
     async def _get_qrcode(self) -> None:
-        request = Request(
-            "GET",
+        qrcode = await self.get(
             "https://ssl.ptlogin2.qq.com/ptqrshow?appid=549000912&e=2&l=M&s=3&d=72&v=4&t=0.405252856480647&daid=5&pt_3rd_aid=0&u1=https%3A%2F%2Fqzs.qzone.qq.com%2Fqzone%2Fv5%2Floginsucc.html%3Fpara%3Dizone",
         )
-        qrcode = await self.request(request)
         save_image(qrcode.content, self.config.qrcode_path)
         open_file(self.config.qrcode_path)
         log("INFO", f"QRCode successfully saved to {self.config.qrcode_path}")
@@ -97,7 +159,7 @@ class Session:
             "ptqrtoken": ptqrtoken,
             "action": "0-0-" + self._get_time(),
         }
-        qrstatus = await self.request(Request("GET", str(url), cookies=self.cookies))
+        qrstatus = await self.get(url)
         assert isinstance(qrstatus.content, bytes)
         text = qrstatus.content.decode()
         matcher = re.search("ptuiCB\\('0','0','(https:[a-zA-Z0-9?=&/._%]+)','0'", text)
@@ -140,13 +202,9 @@ class Session:
             "p_uin": self.qq_number,
             "picfile": uri,
         }
-        html = await self.request(
-            Request(
-                "POST",
-                f"https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk={self._get_gtk()}",
-                data=data,
-                cookies=self.cookies,
-            )
+        html = await self.post(
+            f"https://up.qzone.qq.com/cgi-bin/upload/cgi_upload_image?g_tk={self._get_gtk()}",
+            data=data,
         )
         assert isinstance(html.content, bytes)
         log("DEBUG", f"{html}")
@@ -165,9 +223,7 @@ class Session:
             if check_sig_link:
                 # log("DEBUG", matcher.group(1))
                 log("DEBUG", str(self.cookies))
-                response = await self.request(
-                    Request("GET", check_sig_link, cookies=self.cookies)
-                )
+                response = await self.get(check_sig_link)
                 assert response.request
                 self.cookies = response.request.cookies
                 self.qq_number = self._get_qq_number()
@@ -175,14 +231,12 @@ class Session:
         remove_file(self.config.qrcode_path)
         log("DEBUG", str(self.cookies))
         # log("DEBUG", self.cookies["p_skey"])
-        self._save_cookies()
         log("INFO", f"Logged in successfully, QQ number is {self.qq_number}")
 
     async def logout(self):
         if not self.logged_in:
             raise NotLoggedIn
         self.qq_number = None
-        self.cookies.clear()
         self._delete_cookies()
         log("INFO", "Logged out successfully")
 
@@ -253,7 +307,7 @@ class Session:
 
         url = f"https://user.qzone.qq.com/proxy/domain/taotao.qzone.qq.com/cgi-bin/emotion_cgi_publish_v6?g_tk={self._get_gtk()}"
         # log("DEBUG", f"DATA: {data}")
-        html = await self.request(Request("POST", url, data=data, cookies=self.cookies))
+        html = await self.post(url, data=data)
         assert isinstance(html.content, bytes)
         log("DEBUG", f"{html}")
         html = html.content.decode()
