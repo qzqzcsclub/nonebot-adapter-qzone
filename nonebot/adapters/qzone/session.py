@@ -148,7 +148,9 @@ class Session:
             )
         )
         assert isinstance(html.content, bytes)
+        log("DEBUG", f"{html}")
         html = html.content.decode()
+        log("DEBUG", escape_tag(html))
         return json.loads(html[html.find("data") + 6 : html.find("ret") - 2])
 
     async def login(self):
@@ -252,6 +254,7 @@ class Session:
         # log("DEBUG", f"DATA: {data}")
         html = await self.request(Request("POST", url, data=data, cookies=self.cookies))
         assert isinstance(html.content, bytes)
+        log("DEBUG", f"{html}")
         html = html.content.decode()
         log("DEBUG", escape_tag(html))
         ret = json.loads(html[html.find("callback(") + 9 : html.find("});") + 1])
