@@ -1,3 +1,4 @@
+import asyncio
 import json
 import math
 import time
@@ -159,7 +160,7 @@ class Session:
 
         await self._get_qrcode()
         while True:
-            time.sleep(1)
+            await asyncio.sleep(1)
             check_sig_link = await self._check_qrcode()
             if check_sig_link:
                 # log("DEBUG", matcher.group(1))
