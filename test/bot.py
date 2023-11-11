@@ -19,6 +19,7 @@ nonebot.init(
     qzone_cache_path=Path(__file__).parent / "cache",
 )
 nonebot.load_plugin("plugins.post")
+nonebot.load_plugin("plugins.test")
 
 app = nonebot.get_asgi()
 
