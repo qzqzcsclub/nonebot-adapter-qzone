@@ -1,6 +1,3 @@
-import base64
-from pathlib import Path
-
 from nonebot import get_bot, on_command
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
@@ -9,15 +6,7 @@ from nonebot.adapters import Message
 from nonebot.adapters.qzone import PublishEvent, LoginEvent, LogoutEvent, QueryEvent
 from nonebot.adapters.qzone import MessageSegment
 
-
-SAMPLE_IMAGE_PATH = str((Path(__file__).parent.parent / "sample.png").resolve())
-
-
-def to_uri(path: str):
-    with open(path, "rb") as img:
-        binary = img.read()
-    code = base64.b64encode(binary).decode("utf-8")
-    return f"data:image/png;base64,{code}"
+from . import SAMPLE_IMAGE_PATH, to_uri
 
 
 publish = on_command("publish", to_me())
