@@ -21,7 +21,7 @@ async def handle_test_delay(message: Message = CommandArg()):
     await test_delay.send(f"Delayed publishing is scheduled for {time} minutes later")
     await asyncio.sleep(time * 60)
     bot = get_bot("qzone_bot")
-    msg = MessageSegment.text("test")
+    msg = MessageSegment.text("test-delay")
     tid, pic_id = await bot.send(PublishEvent(), msg)
     await test_delay.send(f"Delayed published: {tid} {pic_id}")
 
