@@ -300,7 +300,7 @@ class Session:
                 "ver": 1,
                 "ugc_right": 1,
                 "to_sign": 0,
-                "hostuin": "3193974372",
+                "hostuin": self.qq_number,
                 "code_version": 1,
                 "format": "fs",
                 "qzreferrer": self._get_qzreferrer(),
