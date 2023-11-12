@@ -1,4 +1,4 @@
-from nonebot import get_bot, on_command
+from nonebot import get_bot, on_command, logger
 from nonebot.params import CommandArg
 from nonebot.rule import to_me
 from nonebot.adapters import Message
@@ -18,7 +18,7 @@ query = on_command("query", to_me())
 @publish.handle()
 async def handle_publish(message: Message = CommandArg()):
     bot = get_bot("qzone_bot")
-    print(type(message), message)
+    logger.debug(f"{type(message)} {message}")
     msg = MessageSegment.text(str(message))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
     msg += MessageSegment.image(to_uri(SAMPLE_IMAGE_PATH))
