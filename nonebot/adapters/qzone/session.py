@@ -175,6 +175,7 @@ class Session:
         return self.cookies["uin"][1:]
 
     async def _upload_image(self, uri: str) -> dict:
+        log("DEBUG", f"Upload images with\n{self.cookies}")
         data = {
             "qzreferrer": self._get_qzreferrer(),
             "filename": "filename",
@@ -207,7 +208,7 @@ class Session:
             data=data,
         )
         assert isinstance(html.content, bytes)
-        log("DEBUG", f"{html}")
+        log("DEBUG", f"Upload result {html}")
         html = html.content.decode()
         log("DEBUG", escape_tag(html))
         return json.loads(html[html.find("data") + 6 : html.find("ret") - 2])
@@ -246,6 +247,7 @@ class Session:
         if not self.logged_in:
             raise NotLoggedIn
         assert self.qq_number
+        log("DEBUG", f"Publish with\n{self.cookies}")
 
         data: Dict[str, Union[int, str]] = {}
         pic_id: List[str] = []
@@ -309,7 +311,7 @@ class Session:
         # log("DEBUG", f"DATA: {data}")
         html = await self.post(url, data=data)
         assert isinstance(html.content, bytes)
-        log("DEBUG", f"{html}")
+        log("DEBUG", f"Publish result: {html}")
         html = html.content.decode()
         log("DEBUG", escape_tag(html))
         ret = json.loads(html[html.find("callback(") + 9 : html.find("});") + 1])

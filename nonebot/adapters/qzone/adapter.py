@@ -59,10 +59,10 @@ class Adapter(BaseAdapter):
         # log("DEBUG", f"Message: {message}")
         for sgm in message:
             if isinstance(sgm, Text):
-                log("DEBUG", f"MessageSegment: {sgm} {type(sgm)} {sgm.data}")
+                log("DEBUG", f"Text: {type(sgm)} {sgm.data}")
                 content = sgm.data["text"]
             if isinstance(sgm, Image):
-                log("DEBUG", f"MessageSegment: {sgm} {type(sgm)}")
+                log("DEBUG", f"Image: {type(sgm)}")
                 images.append(sgm.data["file"])
 
         return await self.session.publish(content, images)
