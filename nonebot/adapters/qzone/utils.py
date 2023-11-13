@@ -57,17 +57,18 @@ def remove_file(path: Union[Path, str]) -> None:
 
 
 def open_file(path: Union[Path, str]) -> None:
-    match PLATFORM:
-        case Platform.MACOS:
-            os.system(f"open {path}")
-        case Platform.WINDOWS:
-            ...
-        case Platform.WSL:
-            subprocess.call(["wslview", path])
-        case Platform.LINUX:
-            subprocess.call(["xdg-open", path])
-        case _:
-            raise OSError("Unknown platform")
+    # match PLATFORM:
+    #     case Platform.MACOS:
+    #         os.system(f"open {path}")
+    #     case Platform.WINDOWS:
+    #         ...
+    #     case Platform.WSL:
+    #         subprocess.call(["wslview", path])
+    #     case Platform.LINUX:
+    #         subprocess.call(["xdg-open", path])
+    #     case _:
+    #         raise OSError("Unknown platform")
+    pass
 
 
 log = logger_wrapper(ADAPTER_NAME)
